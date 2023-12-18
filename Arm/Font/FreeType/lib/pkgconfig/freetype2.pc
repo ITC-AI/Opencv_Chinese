@@ -1,0 +1,14 @@
+prefix=/home/disk/wcp/Coding/Coding-Rknn/Ocr/Font/Arm/freetype-2.13.2/INSTALL
+exec_prefix=/home/disk/wcp/Coding/Coding-Rknn/Ocr/Font/Arm/freetype-2.13.2/INSTALL
+libdir=/home/disk/wcp/Coding/Coding-Rknn/Ocr/Font/Arm/freetype-2.13.2/INSTALL/lib
+includedir=/home/disk/wcp/Coding/Coding-Rknn/Ocr/Font/Arm/freetype-2.13.2/INSTALL/include
+
+Name: FreeType 2
+URL: https://freetype.org
+Description: A free, high-quality, and portable font engine.
+Version: 26.1.20
+Requires: 
+Requires.private: harfbuzz >= 2.0.0
+Libs: -L/home/disk/wcp/Coding/Coding-Rknn/Ocr/Font/Arm/freetype-2.13.2/INSTALL/lib -lfreetype
+Libs.private: 
+Cflags: -I${includedir}/freetype2
