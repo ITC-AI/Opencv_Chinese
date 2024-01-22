@@ -7,7 +7,6 @@
 
 cvx::CvxFont::CvxFont(const cv::String& fontType)
 {
-    setlocale(LC_ALL, "en_US.utf8");  // 设置为适合显示中文的语言环境
     assert(!fontType.empty());
     m_error = FT_Init_FreeType(&m_library);
     if (m_error){
@@ -57,6 +56,90 @@ void cvx::CvxFont::initFont()
     FT_Set_Pixel_Sizes(m_face, getFontSize(), 0);
 }
 
+int my_mbtowc(wchar_t* dest, const char* src, size_t n)
+{
+    if (n == 0 || src == nullptr)
+    {
+        return 0;  // 输入为空，不进行转换
+    }
+
+    uint8_t firstByte = static_cast<uint8_t>(*src);
+    int numBytes = 0;
+
+    if (firstByte <= 0x7F)
+    {
+        // 单字节字符
+        if (dest != nullptr)
+        {
+            *dest = static_cast<wchar_t>(firstByte);
+        }
+        numBytes = 1;
+    }
+    else if (firstByte >= 0xC2 && firstByte <= 0xDF)
+    {
+        // 双字节字符
+        if (n >= 2 && (static_cast<uint8_t>(src[1]) & 0xC0) == 0x80)
+        {
+            if (dest != nullptr)
+            {
+                *dest = ((static_cast<wchar_t>(firstByte) & 0x1F) << 6) |
+                        (static_cast<wchar_t>(src[1]) & 0x3F);
+            }
+            numBytes = 2;
+        }
+        else
+        {
+            return -1;  // 不完整或非法字符
+        }
+    }
+    else if (firstByte >= 0xE0 && firstByte <= 0xEF)
+    {
+        // 三字节字符
+        if (n >= 3 && (static_cast<uint8_t>(src[1]) & 0xC0) == 0x80 &&
+            (static_cast<uint8_t>(src[2]) & 0xC0) == 0x80)
+        {
+            if (dest != nullptr)
+            {
+                *dest = ((static_cast<wchar_t>(firstByte) & 0x0F) << 12) |
+                        ((static_cast<wchar_t>(src[1]) & 0x3F) << 6) |
+                        (static_cast<wchar_t>(src[2]) & 0x3F);
+            }
+            numBytes = 3;
+        }
+        else
+        {
+            return -1;  // 不完整或非法字符
+        }
+    }
+    else if (firstByte >= 0xF0 && firstByte <= 0xF4)
+    {
+        // 四字节字符
+        if (n >= 4 && (static_cast<uint8_t>(src[1]) & 0xC0) == 0x80 &&
+            (static_cast<uint8_t>(src[2]) & 0xC0) == 0x80 &&
+            (static_cast<uint8_t>(src[3]) & 0xC0) == 0x80)
+        {
+            if (dest != nullptr)
+            {
+                *dest = ((static_cast<wchar_t>(firstByte) & 0x07) << 18) |
+                        ((static_cast<wchar_t>(src[1]) & 0x3F) << 12) |
+                        ((static_cast<wchar_t>(src[2]) & 0x3F) << 6) |
+                        (static_cast<wchar_t>(src[3]) & 0x3F);
+            }
+            numBytes = 4;
+        }
+        else
+        {
+            return -1;  // 不完整或非法字符
+        }
+    }
+    else
+    {
+        return -1;  // 非法字符
+    }
+
+    return numBytes;
+}
+
 void cvx::CvxFont::rotateFont(double angle) {
     angle = (angle / 360) * 3.14159 * 2;
     /* set up matrix */
@@ -76,12 +159,12 @@ void cvx::CvxFont::putTextStr(cv::Mat& img, const cv::String& text, cv::Point po
     int xStart = pos.x;
     int yStart = pos.y;
     m_maxDiffHeight = 0;
-
     const char* ptr = text.c_str();
     std::mbtowc(nullptr, nullptr, 0); // reset the conversion state
     const char* end = ptr + std::strlen(ptr);
     int ret;
-    for (wchar_t wc; (ret = std::mbtowc(&wc, ptr, end - ptr)) > 0; ptr += ret) {
+    wchar_t wc;
+    for (wchar_t wc; (ret = my_mbtowc(&wc, ptr, end - ptr)) > 0; ptr += ret) {
         putWChar(img, (wc & 0xffffffff), pos, color);
     }
 

@@ -13,9 +13,8 @@ SET(CMAKE_LINKER "aarch64-buildroot-linux-gnu-ld")
 link_directories(${SYS_LIB_PATH}/link)
 
 #opencv库路径
-set(OpenCV_DIR ${CMAKE_CURRENT_LIST_DIR}/source/rk3588_opencv455/lib/cmake/opencv4)
+set(OpenCV_DIR ${CMAKE_CURRENT_LIST_DIR}/rk3588_opencv455/lib/cmake/opencv4)
 find_package(OpenCV REQUIRED COMPONENTS imgproc core imgcodecs)  # 指定需要的 OpenCV 组件
-
 if (OpenCV_FOUND)
     message("OpenCV found: ${OpenCV_VERSION}")
     include_directories(${OpenCV_INCLUDE_DIRS})
@@ -31,14 +30,14 @@ include_directories(${CMAKE_CURRENT_LIST_DIR}/FreeType/include)
 #源文件
 set (SRC_PATH
     ${CMAKE_CURRENT_LIST_DIR}
-    ${CMAKE_CURRENT_LIST_DIR}/Font/src
+    ${CMAKE_CURRENT_LIST_DIR}/src
 )
 foreach(item ${SRC_PATH})
     aux_source_directory (${item} SRC_LIST)
 endforeach()
 #头文件
 set (STREAM_INCLUDE
-    ${CMAKE_CURRENT_LIST_DIR}/Font/include
+    ${CMAKE_CURRENT_LIST_DIR}/include
 )
 foreach(item ${STREAM_INCLUDE})
     include_directories ( ${item} ) 
@@ -47,7 +46,7 @@ endforeach()
 add_compile_options(-Wall)
 
 #添加库
-set (LIBS pthread stdc++)
+set (LIBS pthread stdc++ freetype)
 
 add_executable(OcrChinese ${SRC_LIST})
 target_link_libraries (OcrChinese  ${LIBS} ${OpenCV_LIBS})
